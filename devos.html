@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevOps Pipeline — A CSE Data Science Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0b1e38;
+    --navy-mid:#132c4d;
+    --slate-blue:#1e3a5f;
+    --brass:#b9923e;
+    --brass-bright:#d9b866;
+    --parchment:#f3efe4;
+    --parchment-dim:#e9e3d2;
+    --ink:#24211c;
+    --ink-soft:#4a4638;
+    --pass-green:#3f6b4c;
+    --rule:#c8bfa2;
+    --shadow:0 18px 40px -20px rgba(11,30,56,0.45);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  body{
+    margin:0;
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Source Serif 4', Georgia, serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3,.display{
+    font-family:'Playfair Display', Georgia, serif;
+    color:var(--navy-deep);
+    margin:0;
+  }
+
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+  }
+
+  a{ color:inherit; }
+
+  /* -------------------- NAV -------------------- */
+  header.site-nav{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 6vw;
+    background:rgba(11,30,56,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(185,146,62,0.35);
+    transition:padding .3s ease;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    color:var(--parchment);
+  }
+  .brand .seal{
+    width:34px; height:34px;
+    border:1.5px solid var(--brass);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--brass-bright);
+    flex-shrink:0;
+  }
+  .brand-text .top{
+    font-family:'Playfair Display',serif;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:0.02em;
+  }
+  .brand-text .bottom{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:0.18em;
+    color:var(--brass-bright);
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+  nav.links{
+    display:flex;
+    gap:34px;
+  }
+  nav.links a{
+    text-decoration:none;
+    color:var(--parchment-dim);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    position:relative;
+    padding-bottom:4px;
+  }
+  nav.links a::after{
+    content:'';
+    position:absolute;
+    left:0; bottom:0;
+    width:0%;
+    height:1px;
+    background:var(--brass-bright);
+    transition:width .35s cubic-bezier(.4,0,.2,1);
+  }
+  nav.links a:hover{ color:var(--parchment); }
+  nav.links a:hover::after{ width:100%; }
+
+  @media (max-width: 760px){
+    nav.links{ display:none; }
+  }
+
+  /* -------------------- HERO -------------------- */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 20% 15%, rgba(185,146,62,0.10), transparent 55%),
+      linear-gradient(180deg, var(--navy-deep) 0%, var(--navy-mid) 100%);
+    color:var(--parchment);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:140px 6vw 90px;
+    overflow:hidden;
+  }
+
+  .hero::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(243,239,228,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(243,239,228,0.045) 1px, transparent 1px);
+    background-size:42px 42px;
+    pointer-events:none;
+  }
+
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    max-width:1180px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--brass-bright);
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:28px;
+    opacity:0;
+    animation:fadeUp .9s ease forwards .15s;
+  }
+  .eyebrow .line{
+    width:52px; height:1px;
+    background:var(--brass-bright);
+  }
+
+  .hero h1{
+    font-size:clamp(2.6rem, 6.4vw, 5.4rem);
+    line-height:1.03;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:var(--parchment);
+    opacity:0;
+    animation:fadeUp .9s ease forwards .3s;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--brass-bright);
+    font-weight:500;
+  }
+
+  .hero-sub{
+    margin-top:26px;
+    max-width:600px;
+    font-size:1.12rem;
+    line-height:1.7;
+    color:#cdd8e6;
+    opacity:0;
+    animation:fadeUp .9s ease forwards .45s;
+  }
+
+  .hero-meta{
+    margin-top:44px;
+    display:flex;
+    gap:48px;
+    flex-wrap:wrap;
+    opacity:0;
+    animation:fadeUp .9s ease forwards .6s;
+  }
+  .hero-meta div{ border-left:1px solid rgba(185,146,62,0.4); padding-left:16px; }
+  .hero-meta .label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:#8fa3bd;
+    margin-bottom:6px;
+  }
+  .hero-meta .value{
+    font-family:'Playfair Display',serif;
+    font-size:1.05rem;
+    color:var(--parchment);
+  }
+
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(18px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* -------------------- PIPELINE SCHEMATIC -------------------- */
+  .schematic-wrap{
+    position:relative;
+    z-index:2;
+    max-width:1180px;
+    margin:70px auto 0;
+    width:100%;
+    opacity:0;
+    animation:fadeUp 1s ease forwards .8s;
+  }
+  .schematic-caption{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:#8fa3bd;
+    margin-bottom:14px;
+    display:flex;
+    justify-content:space-between;
+  }
+  svg.pipeline{
+    width:100%;
+    height:auto;
+    display:block;
+    overflow:visible;
+  }
+  .pipe-line{
+    fill:none;
+    stroke:rgba(185,146,62,0.55);
+    stroke-width:2;
+  }
+  .pipe-line-inner{
+    fill:none;
+    stroke:rgba(185,146,62,0.22);
+    stroke-width:8;
+  }
+  .flange{
+    fill:var(--navy-mid);
+    stroke:var(--brass-bright);
+    stroke-width:1.6;
+  }
+  .flange-dot{
+    fill:var(--brass-bright);
+  }
+  .stage-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    fill:#cdd8e6;
+    text-transform:uppercase;
+  }
+  .stage-index{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    fill:#6d84a3;
+  }
+  .pulse{
+    fill:#e7c877;
+    filter:drop-shadow(0 0 6px rgba(231,200,119,0.9));
+    offset-path:path('M 40,60 L 1120,60');
+    animation:flow 6s linear infinite;
+  }
+  @keyframes flow{
+    0%{ offset-distance:0%; opacity:0; }
+    5%{ opacity:1; }
+    95%{ opacity:1; }
+    100%{ offset-distance:100%; opacity:0; }
+  }
+  .stage-node{ transition:transform .3s ease; }
+  .stage-node:hover{ transform:translateY(-3px); }
+  .stage-node:hover .flange{ stroke:#f0d999; }
+
+  @media (max-width: 760px){
+    .hero-meta{ gap:26px; }
+  }
+
+  /* -------------------- SECTION shared -------------------- */
+  section{
+    padding:120px 6vw;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:22px;
+    margin-bottom:56px;
+  }
+  .section-head .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--brass);
+    letter-spacing:0.1em;
+  }
+  .section-head h2{
+    font-size:clamp(1.9rem,3.4vw,2.7rem);
+    font-weight:600;
+  }
+  .section-head .rule{
+    flex:1;
+    height:1px;
+    background:var(--rule);
+    margin-top:6px;
+  }
+
+  /* -------------------- ABOUT -------------------- */
+  .about-grid{
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:70px;
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .about-grid{ grid-template-columns:1fr; }
+  }
+  .about-text p{
+    font-size:1.08rem;
+    line-height:1.85;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+  }
+  .about-text .drop{
+    color:var(--navy-deep);
+    font-weight:600;
+  }
+  .about-card{
+    background:var(--navy-deep);
+    color:var(--parchment);
+    padding:38px 34px;
+    border:1px solid var(--brass);
+    position:relative;
+  }
+  .about-card::before{
+    content:'';
+    position:absolute;
+    inset:8px;
+    border:1px solid rgba(185,146,62,0.4);
+    pointer-events:none;
+  }
+  .about-card h3{
+    color:var(--brass-bright);
+    font-size:1.15rem;
+    margin-bottom:18px;
+  }
+  .about-card ul{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .about-card li{
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    border-bottom:1px dashed rgba(243,239,228,0.18);
+    padding-bottom:12px;
+    letter-spacing:0.02em;
+  }
+  .about-card li span:first-child{ color:#9fb1c8; text-transform:uppercase; letter-spacing:0.12em; }
+  .about-card li span:last-child{ color:var(--parchment); text-align:right; }
+
+  /* -------------------- STAGES DETAIL -------------------- */
+  .stage-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:1px;
+    background:var(--rule);
+    border:1px solid var(--rule);
+  }
+  .stage-card{
+    background:var(--parchment);
+    padding:30px 26px;
+    position:relative;
+    transition:background .35s ease;
+  }
+  .stage-card:hover{ background:var(--parchment-dim); }
+  .stage-card .idx{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--brass);
+    letter-spacing:0.14em;
+  }
+  .stage-card h3{
+    margin-top:12px;
+    font-size:1.25rem;
+  }
+  .stage-card p{
+    margin-top:10px;
+    font-size:0.94rem;
+    line-height:1.6;
+    color:var(--ink-soft);
+  }
+
+  /* -------------------- TEAM -------------------- */
+  .team-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:34px;
+  }
+  .plate{
+    background:var(--navy-deep);
+    padding:2px;
+    position:relative;
+    overflow:hidden;
+  }
+  .plate-inner{
+    background:linear-gradient(160deg, var(--navy-mid), var(--navy-deep));
+    padding:38px 28px 30px;
+    height:100%;
+    position:relative;
+    border:1px solid rgba(185,146,62,0.35);
+    transition:border-color .4s ease, transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .plate:hover .plate-inner{
+    transform:translateY(-6px);
+    border-color:var(--brass-bright);
+  }
+  .plate-inner::after{
+    content:'';
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:2px;
+    background:linear-gradient(90deg, transparent, var(--brass-bright), transparent);
+    transform:scaleX(0);
+    transition:transform .5s ease;
+  }
+  .plate:hover .plate-inner::after{ transform:scaleX(1); }
+
+  .plate-mono{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.18em;
+    color:var(--brass-bright);
+    text-transform:uppercase;
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:26px;
+  }
+  .plate-initial{
+    width:56px; height:56px;
+    border:1.5px solid var(--brass);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Playfair Display',serif;
+    font-size:1.3rem;
+    font-weight:700;
+    color:var(--brass-bright);
+    margin-bottom:22px;
+    transition:background .35s ease, color .35s ease;
+  }
+  .plate:hover .plate-initial{
+    background:var(--brass-bright);
+    color:var(--navy-deep);
+  }
+  .plate-inner h3{
+    color:var(--parchment);
+    font-size:1.28rem;
+    letter-spacing:0.01em;
+  }
+  .plate-role{
+    margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    color:#9fb1c8;
+    text-transform:uppercase;
+  }
+  .plate-sep{
+    margin:20px 0;
+    height:1px;
+    background:rgba(185,146,62,0.3);
+  }
+  .plate-foot{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:#7f93ac;
+    letter-spacing:0.08em;
+    line-height:1.7;
+  }
+
+  /* -------------------- SESSION / CERT BAND -------------------- */
+  .cert-band{
+    max-width:none;
+    padding:100px 6vw;
+    background:
+      radial-gradient(ellipse at 80% 30%, rgba(185,146,62,0.08), transparent 55%),
+      var(--navy-deep);
+    color:var(--parchment);
+    text-align:center;
+    position:relative;
+  }
+  .cert-band::before,.cert-band::after{
+    content:'';
+    position:absolute;
+    left:50%;
+    width:1px;
+    height:34px;
+    background:var(--brass);
+    transform:translateX(-50%);
+  }
+  .cert-band::before{ top:52px; }
+  .cert-band::after{ bottom:52px; }
+  .cert-inner{
+    max-width:720px;
+    margin:0 auto;
+  }
+  .cert-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.28em;
+    color:var(--brass-bright);
+    text-transform:uppercase;
+    margin-bottom:22px;
+  }
+  .cert-band h2{
+    color:var(--parchment);
+    font-size:clamp(1.8rem,3.6vw,2.6rem);
+    line-height:1.35;
+  }
+  .cert-band h2 em{
+    font-style:italic;
+    color:var(--brass-bright);
+    font-weight:500;
+  }
+  .cert-band p{
+    margin-top:22px;
+    color:#a9bad2;
+    font-size:1rem;
+    line-height:1.75;
+  }
+
+  /* -------------------- FOOTER -------------------- */
+  footer{
+    padding:44px 6vw;
+    background:var(--navy-deep);
+    border-top:1px solid rgba(185,146,62,0.25);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  footer .mono{
+    color:#7f93ac;
+    font-size:10.5px;
+  }
+  footer .mono strong{ color:var(--brass-bright); font-weight:500; }
+
+  ::selection{ background:var(--brass); color:var(--navy-deep); }
+
+  a:focus-visible, .stage-node:focus-visible{
+    outline:2px solid var(--brass-bright);
+    outline-offset:3px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="brand">
+    <div class="seal">DP</div>
+    <div class="brand-text">
+      <div class="top">DevOps Pipeline</div>
+      <div class="bottom">CSE · Data Science</div>
+    </div>
+  </div>
+  <nav class="links">
+    <a href="#about">Abstract</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#team">Team</a>
+    <a href="#session">Session</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow"><span class="line"></span> Academic Project Record No. 2024‑CSDS‑07</div>
+    <h1>Devops <em>Pipeline</em></h1>
+    <p class="hero-sub">A continuous integration and delivery pipeline, designed, documented, and defended by four students of Computer Science &amp; Engineering — Data Science, as part of their undergraduate coursework.</p>
+    <div class="hero-meta">
+      <div>
+        <div class="label">Discipline</div>
+        <div class="value">CSE — Data Science</div>
+      </div>
+      <div>
+        <div class="label">Session</div>
+        <div class="value">2024 – 2028</div>
+      </div>
+      <div>
+        <div class="label">Team Size</div>
+        <div class="value">Four Students</div>
+      </div>
+      <div>
+        <div class="label">Status</div>
+        <div class="value" style="color:var(--brass-bright);">Deployed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="schematic-wrap" id="pipeline">
+    <div class="schematic-caption">
+      <span>Fig. 1 — Pipeline Schematic</span>
+      <span>Plan → Monitor</span>
+    </div>
+    <svg class="pipeline" viewBox="0 0 1160 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CI/CD pipeline diagram showing seven stages: Plan, Code, Build, Test, Release, Deploy, Monitor">
+      <line class="pipe-line-inner" x1="40" y1="60" x2="1120" y2="60"></line>
+      <line class="pipe-line" x1="40" y1="60" x2="1120" y2="60"></line>
+      <circle class="pulse" r="5"></circle>
+
+      <!-- stage nodes generated at 7 even intervals -->
+      <g class="stages"></g>
+    </svg>
+  </div>
+</section>
+
+<section id="about">
+  <div class="section-head">
+    <span class="num">01</span>
+    <h2>Abstract</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="about-grid">
+    <div class="about-text">
+      <p><span class="drop">DevOps Pipeline</span> is an academic implementation of a continuous integration and continuous delivery workflow, built to demonstrate how modern software teams move code from a developer's machine into a running, monitored production system without manual bottlenecks.</p>
+      <p>The project traces a single change through seven disciplined stages — planning, version‑controlled coding, automated building, testing, release packaging, deployment, and live monitoring — mirroring the practice used across the software industry today.</p>
+      <p>It was undertaken as a collaborative submission for the Computer Science &amp; Engineering (Data Science) programme, combining principles of software engineering, systems automation, and applied data monitoring.</p>
+    </div>
+    <div class="about-card">
+      <h3>Project Record</h3>
+      <ul>
+        <li><span>Title</span><span>DevOps Pipeline</span></li>
+        <li><span>Branch</span><span>CSE – Data Science</span></li>
+        <li><span>Session</span><span>2024 – 2028</span></li>
+        <li><span>Team</span><span>4 Members</span></li>
+        <li><span>Stages Implemented</span><span>7</span></li>
+        <li><span>Category</span><span>Systems / Automation</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="stages-detail">
+  <div class="section-head">
+    <span class="num">02</span>
+    <h2>The Seven Stages</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="stage-cards" id="stageCards"></div>
+</section>
+
+<section id="team">
+  <div class="section-head">
+    <span class="num">03</span>
+    <h2>The Team</h2>
+    <span class="rule"></span>
+  </div>
+  <div class="team-grid" id="teamGrid"></div>
+</section>
+
+<section id="session" class="cert-band">
+  <div class="cert-inner">
+    <div class="cert-eyebrow">Certified Coursework Submission</div>
+    <h2>Prepared and presented by students of <em>CSE — Data Science</em>, session <em>2024–2028</em>.</h2>
+    <p>This project reflects independent academic work in the field of DevOps automation, undertaken in fulfilment of undergraduate curriculum requirements.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="mono">© 2026 · DEVOPS PIPELINE · A STUDENT PROJECT — <strong>CSE‑DATA SCIENCE</strong></div>
+  <div class="mono">SESSION 2024–2028</div>
+</footer>
+
+<script>
+  // ---------- Pipeline stage data ----------
+  const stages = [
+    { name:"Plan",    detail:"Requirements and version-control strategy defined before a single line of code is written." },
+    { name:"Code",    detail:"Feature branches committed against a shared repository with peer review on every change." },
+    { name:"Build",   detail:"Source is compiled and packaged automatically on each push, catching integration errors early." },
+    { name:"Test",    detail:"Automated unit and integration tests run against every build before it can advance." },
+    { name:"Release", detail:"Verified builds are versioned and staged, ready to ship on a controlled schedule." },
+    { name:"Deploy",  detail:"Releases roll out to the target environment through a repeatable, scripted process." },
+    { name:"Monitor", detail:"Live metrics and logs are watched continuously, feeding insight back into planning." }
+  ];
+
+  // ---------- Draw SVG pipeline nodes ----------
+  const svgNS = "http://www.w3.org/2000/svg";
+  const stagesGroup = document.querySelector(".stages");
+  const startX = 40, endX = 1120, y = 60;
+  const n = stages.length;
+
+  stages.forEach((s, i) => {
+    const x = startX + (endX - startX) * (i / (n - 1));
+
+    const g = document.createElementNS(svgNS, "g");
+    g.setAttribute("class", "stage-node");
+    g.setAttribute("tabindex", "0");
+
+    const flange = document.createElementNS(svgNS, "circle");
+    flange.setAttribute("class", "flange");
+    flange.setAttribute("cx", x);
+    flange.setAttribute("cy", y);
+    flange.setAttribute("r", 12);
+    g.appendChild(flange);
+
+    const dot = document.createElementNS(svgNS, "circle");
+    dot.setAttribute("class", "flange-dot");
+    dot.setAttribute("cx", x);
+    dot.setAttribute("cy", y);
+    dot.setAttribute("r", 3);
+    g.appendChild(dot);
+
+    const idx = document.createElementNS(svgNS, "text");
+    idx.setAttribute("class", "stage-index");
+    idx.setAttribute("x", x);
+    idx.setAttribute("y", y - 24);
+    idx.setAttribute("text-anchor", "middle");
+    idx.textContent = "0" + (i + 1);
+    g.appendChild(idx);
+
+    const label = document.createElementNS(svgNS, "text");
+    label.setAttribute("class", "stage-label");
+    label.setAttribute("x", x);
+    label.setAttribute("y", y + 36);
+    label.setAttribute("text-anchor", "middle");
+    label.textContent = s.name;
+    g.appendChild(label);
+
+    const title = document.createElementNS(svgNS, "title");
+    title.textContent = s.name + " — " + s.detail;
+    g.appendChild(title);
+
+    stagesGroup.appendChild(g);
+  });
+
+  // ---------- Stage detail cards ----------
+  const stageCardsEl = document.getElementById("stageCards");
+  stages.forEach((s, i) => {
+    const card = document.createElement("div");
+    card.className = "stage-card";
+    card.innerHTML = `
+      <div class="idx">STAGE 0${i + 1}</div>
+      <h3>${s.name}</h3>
+      <p>${s.detail}</p>
+    `;
+    stageCardsEl.appendChild(card);
+  });
+
+  // ---------- Team ----------
+  const team = [
+    { name: "Gautam Rishi",   role: "Project Contributor" },
+    { name: "Ashutosh Yadav", role: "Project Contributor" },
+    { name: "Adarsh Kumar",   role: "Project Contributor" },
+    { name: "Raushan Kumar",  role: "Project Contributor" }
+  ];
+
+  const teamGrid = document.getElementById("teamGrid");
+  team.forEach((m, i) => {
+    const initials = m.name.split(" ").map(w => w[0]).join("");
+    const plate = document.createElement("div");
+    plate.className = "plate";
+    plate.innerHTML = `
+      <div class="plate-inner">
+        <div class="plate-mono"><span>No. 0${i + 1}</span><span>CSE‑DS</span></div>
+        <div class="plate-initial">${initials}</div>
+        <h3>${m.name}</h3>
+        <div class="plate-role">${m.role}</div>
+        <div class="plate-sep"></div>
+        <div class="plate-foot">B.TECH · CSE (DATA SCIENCE)<br>SESSION 2024–2028</div>
+      </div>
+    `;
+    teamGrid.appendChild(plate);
+  });
+
+  // ---------- Scroll-reveal for sections ----------
+  const revealTargets = document.querySelectorAll(".stage-card, .plate, .about-card, .about-text p");
+  revealTargets.forEach(el => {
+    el.style.opacity = 0;
+    el.style.transform = "translateY(16px)";
+    el.style.transition = "opacity .7s ease, transform .7s ease";
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = 1;
+        entry.target.style.transform = "translateY(0)";
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  revealTargets.forEach(el => observer.observe(el));
+
+  // ---------- Nav background on scroll ----------
+  const nav = document.querySelector(".site-nav");
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 40) {
+      nav.style.padding = "12px 6vw";
+    } else {
+      nav.style.padding = "20px 6vw";
+    }
+  });
+</script>
+
+</body>
+</html>
